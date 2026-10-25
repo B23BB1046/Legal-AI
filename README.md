@@ -8,85 +8,77 @@ app_port: 7860
 short_description: Indian legal research and courtroom assistant API
 ---
 
-# Supreme Courtroom Assistant (LegAIQ)
+# LegAIQ — Legal Research & Courtroom Assistant
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Framework](https://img.shields.io/badge/Framework-FastAPI%20%7C%20Streamlit-red.svg)]()
-[![Orchestration](https://img.shields.io/badge/Orchestration-LangGraph%20%7C%20ChromaDB-green.svg)]()
+An experimental legal-information assistant for exploring Indian judgments, document-grounded question answering, and courtroom-style simulations. It combines retrieval-augmented generation (RAG), a vector store, API-based legal search, and agentic workflows.
 
-An end-to-end, agentic legal research and courtroom simulation platform tailored for Indian Supreme Court judgments. Driven by Indian Kanoon API integration, local vector search via ChromaDB, and Groq LLMs (`qwen/qwen3.6-27b`), this tool simplifies precedent research, document analysis, and interactive legal reasoning.
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white) ![LangGraph](https://img.shields.io/badge/Workflow-LangGraph-6C5CE7)
 
----
+> **Important:** LegAIQ is an experimental legal-information tool, not a lawyer or a substitute for professional legal advice. Verify judgments, citations, and legal interpretations against authoritative sources.
 
-## 🌟 Key Features
+## What it can do
+- **Judgment search:** integrate with the Indian Kanoon API for legal search and retrieval.
+- **Local legal RAG:** process, chunk, embed, and index documents in ChromaDB for context-grounded answers.
+- **Agentic workflows:** coordinate query expansion, retrieval, evidence analysis, precedent extraction, and citation checks through LangGraph components.
+- **Document analysis:** work with uploaded PDF, TXT, and Markdown documents.
+- **Courtroom simulation:** stage a multi-role discussion involving petitioner, respondent, judge, and outcome.
+- **Accessible explanations:** provide legal concepts in plain language, including Hindi-oriented explanations where supported by the app.
 
-* ** Judgment Search & Retrieval:** Direct API integration with Indian Kanoon for real-time legal research and judgment indexing.
-* ** Local Legal RAG (Retrieval-Augmented Generation):** Automated processing, chunking, and embedding of judgments stored in ChromaDB for grounded context with citations.
-* ** Multi-Agent Reasoning Pipeline:** Autonomous orchestration using LangGraph (Supervisor, Multi-Query Expansion, Reranking, Evidence Analysis, Precedent Extraction, and Citation Verification).
-* ** Custom Document Analysis:** Isolated context-bounded querying for uploaded files (`.pdf`, `.txt`, `.md`).
-* ** Voice-First Courtroom Simulation:** Interactive, multi-stage trial simulation (Petitioner, Respondent, Judge, Outcome) powered by Groq Whisper (STT) and browser-based speech synthesis (TTS).
-* ** Bilingual Support:** Full support for English and simple Hindi explanations for complex legal terminology.
+## Architecture
+```text
+User
+ ├── Streamlit interface (web.py / app.py)
+ └── FastAPI service (api.py)
+       ├── Legal search integration
+       ├── Document processing
+       ├── ChromaDB-backed retrieval
+       ├── LangGraph agent workflow
+       └── LLM / speech services
+```
 
----
+## Repository map
+| Path | Responsibility |
+|---|---|
+| api.py | API service |
+| web.py | Web interface |
+| app.py | App entry point |
+| courtroom.py | Courtroom simulation logic |
+| legal_search.py | Legal search and retrieval |
+| document_processor.py | Uploaded-document processing |
+| agents/ | Agent workflow components |
+| rag/ | Retrieval-augmented generation components |
+| requirements.txt | Python dependencies |
+| Dockerfile | Container configuration |
 
-##  Architecture Overview
+## Configuration
+The application integrates external services. Configure credentials through environment variables or your deployment platform's secret manager. Typical settings include:
+- `GROQ_API_KEY` — LLM / speech service key, where required
+- `INDIAN_KANOON_API_TOKEN` — Indian Kanoon API token, where required
+- `MODEL_NAME` — model identifier used by the deployment
 
-| Phase | Core Capability | Highlights |
-| :--- | :--- | :--- |
-| **Phase 1** | Judgment Search | Direct lookup via Indian Kanoon API with mandatory attribution. |
-| **Phase 2** | Local RAG Pipeline | Clean, chunk, embed, and index judgments in local ChromaDB. |
-| **Phase 3** | Agentic Workflow | Multi-agent execution graph with offline sequential fallback support. |
+Use the exact environment-variable names expected by the current source code and deployment configuration. Never commit API keys, private documents, or local database contents.
 
----
+## Run locally
+1. Clone the repository: `git clone https://github.com/B23BB1046/Legal-AI.git`
+2. Enter the directory: `cd Legal-AI`
+3. Create a virtual environment and activate it.
+4. Install dependencies: `pip install -r requirements.txt`
+5. Set required environment variables, then follow the entry-point and port configuration in the source files.
 
-## Getting Started
+For containerized deployment, review the included Dockerfile and platform configuration.
 
-### Prerequisites
+## Design considerations
+- **Grounding:** answers should be supported by retrieved passages and checked citations.
+- **Traceability:** preserve the source and metadata of each retrieved judgment.
+- **Failure handling:** distinguish unavailable sources from a genuine lack of evidence.
+- **Privacy:** treat uploaded legal documents as potentially sensitive.
+- **Evaluation:** test retrieval quality and answer faithfulness using representative queries and manually reviewed references.
 
-* **Python:** 3.10 or higher
-* **API Keys Required:**
-  * [Indian Kanoon API Token](https://api.indiankanoon.org/)
-  * [Groq API Key](https://console.groq.com/)
+## Limitations
+LLM-generated summaries may omit nuance, misinterpret legal language, or produce incorrect citations. Search coverage depends on external API availability and the documents indexed locally. Always confirm legal claims from primary sources.
 
-### Installation
-
-1. Navigate to the repository root:
-   ```powershell
-   cd SupremeCourtAI
-  ```
-
-## Free Deployment
-
-The FastAPI backend can be deployed to Render. The Streamlit interface should
-be deployed separately on Streamlit Community Cloud because Render and Vercel
-do not run Streamlit's persistent WebSocket session model.
-
-### Deploy the API to Render
-
-1. Open [Render](https://render.com) and choose **New + → Blueprint**.
-2. Connect the `Rajveer-Dhaked-Singh/LegAIQ` GitHub repository.
-3. Render will detect the root `render.yaml` file and create the API service.
-4. Add these environment variables in the Render service settings:
-
-    ```text
-    GROQ_API_KEY=your_groq_key
-    INDIAN_KANOON_API_TOKEN=your_indiankanoon_token
-    MODEL_NAME=qwen/qwen3.6-27b
-    CORS_ORIGINS=https://your-streamlit-app.streamlit.app
-    ```
-
-5. Deploy and verify:
-
-    ```text
-    https://your-project.onrender.com/api/health
-    ```
-
-### Connect Streamlit
-
-Deploy `web.py` on Streamlit Community Cloud and set its secret:
-
-   ```text
-   API_URL=https://your-project.vercel.app/api
-   ```
-
-Do not commit `.env`, API keys, `venv/`, `data/`, `database/`, or `uploads/`.
+## Future improvements
+- Add a reproducible evaluation set for retrieval and answer quality.
+- Track citation correctness and evidence coverage.
+- Add tests for API endpoints, document parsing, and agent failures.
+- Document deployment health checks and configuration in one place.
